@@ -1,0 +1,129 @@
+===================================================================
+Books
+===================================================================
+References used for Book related Schema:
+ 1. https://tools.ietf.org/html/rfc3187
+ 2. https://www.isbn-international.org/content/isbn-users-manual
+ 3. https://openlibrary.org/dev/docs/api/books
+
+NOTE: There is an ISO standard ISO 2108: https://www.iso.org/standard/65483.html
+But it cost $118 just to read it.
+
+An ISBN is a numeric string of usually 10 (legacy) or 13 digits (new), but
+can actually be variable in length.
+
+The ISBN number represents 5 sets of elements:
+  1. GS1 Element:
+       * Length    : Precisely 3 digits.
+       * Validation: Either 978, or 979 for ISBN currently
+       * Represents: Namespace Prefix controlled by GS1 Global Office for ISBN use
+
+  2. Registration Group Element
+       * Length    : Up to 5 digits, if less than 5 must use whitespace or hyphens
+       * Validation:
+       * Represents: Identifies country, geographical region or language
+
+  3. Registrant Element
+       * Length    : Up to 7 digits, if less than 7 must use whitespace or hypens
+       * Validation:
+       * Represents: A particular publisher or imprint within a Registration Group
+
+  4. Publication Element
+       * Length    : 6 digits, if less than 6 must use leading zeroes
+       * Validation:
+       * Represents: A specific edition of a publication by a specific publisher
+
+  5. Check Digit
+       * Length    : Precisely 1 CHAR
+       * Validation: Either a digit or the letter: X
+       * Represents: A check character computed from remainder or ISBN #
+
+-------------------------------------------------------------------
+Book Tables
+-------------------------------------------------------------------
+authors:
+  author_id: Integer, PK
+  name     : String len(TBD)
+  url      : String len(TBD)
+    unique(url)
+
+publishers:
+  publisher_id: Integer PK
+  name        : String len(TBD)
+    unique(url)
+
+ratings:
+  rating_id  : Integer, PK
+  rating     : String len(TBD)
+  isactive   : Boolean
+
+series:
+  series_id  : Integer, PK
+  series_name: String len(TBD)
+    NOTE: These are not author specific as defined
+
+tags:
+  tag_id  : Intger, PK
+  tag_name: String len(TBD)
+  isactive: Boolean
+
+books:
+  book_id        : Integer, PK
+  isbn10         : String len(10)
+  isbn13         : String len(13)
+  title          : String len(TBD)
+  subtitle       : String len(TBD)
+  url            : String len(TBD)
+  number_of_pages: Integer
+  cover_small    : String len(TBD) - pointer to disk file
+  cover_medium   : String len(TBD) - pointer to disk file
+  cover_large    : String len(TBD) - pointer to disk file
+  publish_date   : Date
+  edition        : Enumerated value (Paperback, Hard Cover, EBook, Mass Market Paperback)
+  rating_id      : Integer, FK ratings.ratid_id
+    unique(url)
+    NOTE: there are instances of people re-using ISBN. So unique is bad idea but software needs to deal with it.
+
+book_publishers (many authors -> book):
+  book_id     : Integer, FK books.book_id
+  publisher_id: Integer, FK publishers.publisher_id
+    unique(book_id, publisher_id)
+
+book_authors (many authors -> book):
+  book_id  : Integer, FK books.book_id
+  author_id: Integer, FK authors.author_id
+  isprimary: Boolean  -- XXX: do we want this to identify first name in Author list?
+    unique(book_id, author_id)
+
+book_tags (many tags -> book):
+  book_id  : Integer, FK books.book_id
+  tag_id   : Integer, FK tags.tag_id
+    unique(book_id, tag_id)
+
+series_books (many books -> series):
+  series_id:  Integer, FK series.series_id
+  book_id  :  Integer, FK books.book_id
+  sequence :  Integer
+    unique(series_id, book_id)
+    unique(series_id, sequence)
+    constraint: sequence > 0
+
+===================================================================
+Music
+===================================================================
+References for Music related Schema
+  1. https://musicbrainz.org/doc/Development
+     They have APIs
+
+  2. See: http://www.freedbimporter.de/
+     No APIs but freedb is what I use to get info when ripping CDs
+
+===================================================================
+Photos
+===================================================================
+TBD: in future
+
+===================================================================
+Video
+===================================================================
+Look at Plex DB (sqlite) for schema, no published docs

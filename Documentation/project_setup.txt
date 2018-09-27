@@ -1,0 +1,102 @@
+NOTE: $PROJECT is this project's root directory
+
+https://auth0.com/blog/using-python-flask-and-angular-to-build-modern-apps-part-1/
+
+--------------------------------------------------------
+Backend
+--------------------------------------------------------
+*** Technologies
+    Python3
+    VirtualEnv (pipenv)
+    Flask
+    Flask-CORS (Cross-Origin Resource Sharing)
+    Flask-Restful?
+    SQLAlchemy, PostgreSQL (PsycoPG2)
+    Marshmallow
+
+*** Install dependencies
+    Use pipenv for package setup/tracking
+
+    cd $PROJECT
+    sudo pip install pipenv
+
+*** Bootstrap Flask application
+    cd $PROJECT
+    mkdir backend
+    cd backend
+    pipenv --three
+        Running virtualenv with interpreter /usr/bin/python3
+        Using base prefix '/usr'
+        New python executable in /home/rternosky/.local/share/virtualenvs/backend-RZ_kyaec/bin/python3
+        Also creating executable in /home/rternosky/.local/share/virtualenvs/backend-RZ_kyaec/bin/python
+        Installing setuptools, pip, wheel...done.
+        Setting project for backend-RZ_kyaec to /home/rternosky/src/mediaserver/backend
+    pipenv install flask marshmallow flask-cors
+    pipenv install sqlalchemy psycopg2-binary
+
+    touch src/__init__.py
+
+    Create file: backend/src/main.py
+
+# coding=utf-8
+"""
+Copyright 2018 Robert Ternosky
+"""
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
+
+     Create file: backend/bootstrap.sh
+#!/bin/bash
+# Copyright 2018 Robert Ternosky
+export FLASK_APP=./src/main.py
+source $(pipenv --venv)/bin/activate
+flask run -h 0.0.0.0
+
+     Make bootstrap.sh executable
+     cd $PROJECT/backend
+     chmod +x bootstrap.sh
+
+NOTES:
+  run "pipenv shell -c" to start virtualenv shell
+  There is no "deactivate" simply exit the shell
+  run "pipenv run <cmd>" to execute "<cmd>" in virtualenv
+
+--------------------------------------------------------
+Frontend
+--------------------------------------------------------
+*** Technologies
+    Angular
+    Node.js
+    NPM
+
+*** Install Dependencies
+    Use Latest Angular
+
+    cd $PROJECT
+    curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    sudo npm install -g @angular/cli
+
+*** Bootstrap Flask application
+    cd $PROJECT
+    sudo chown -R $USER:$(id -gn $USER) /home/rternosky/.config
+    ng new frontend
+    npm update
+
+--------------------------------------------------------
+Configure FrontEnd to use Backend
+--------------------------------------------------------
+    cd $PROJECT/frontend/src/app
+    Create file env.ts
+# Copyright 2018 Robert Ternosky
+export const API_URL = 'http://localhost:5000';
+
+--------------------------------------------------------
+Database
+--------------------------------------------------------
+*** Technologies
+
+*** Install Dependencies

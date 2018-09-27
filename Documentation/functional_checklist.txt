@@ -1,0 +1,62 @@
+Things I want the system to have:
+
+1. Auth system with roles:
+   * Reader (Read Only access to data)
+   * Editor (Can add/edit/remove entries)
+   * Administrator (Can edit system settings)
+
+2. Book Catalog
+   * View catalog similar to Plex
+     * Cover (small) view
+     * Order by Author, Title by default
+     * Sort options (multi sort)
+     * Filter options (Genre, year, format, rating)
+     * Alphabetic Jump Index down side like Plex
+   * Click to get to detail screen like Plex
+   * Edit option on detail screen, perhaps from thumbnail like Plex
+   * Rating system from thumbnail
+   * Add/Edit utilize OpenLibrary API
+     * Search by Author, Title, ISBN
+     * Display search results including edition information
+     * Select to update form on add/edit path
+     * Add/remove/update cover images
+       * multiple sizes for thumb vs detail screens
+     * Save button creates/update entries
+   * Remove - archive not remove
+   * Export - as XLS DB data
+
+3. Music
+   * View catalog, similar to Plex - BUT different layout on filesystem
+     * Cover (small) view
+     * Order by Album Artist, Album Title by default
+     * Sort options (multi sort)
+     * Filter options (Genre, year, rating)
+     * Alphabetic Jump Index down side like Plex
+   * Click to get to detail screen like Plex
+   * Edit option on detail screen, perhaps from thumbnail like Plex
+   * Rating system from thumbnail
+   * Add/Edit
+     * Scan from filesystem for Add
+       * Write .mediaserver file to link to DB IDs
+     * Edit does tag editing and filesystem changing as well as DB update
+     * External images for thumb/detail/ID3 image to be used
+     * Scan for diffs option to detect filesystem changes - new additions/moves/renames/tag updates
+       * Tag data considered authoritative for ID3 info.
+   * Remove - Archive don't remove. Consider how this affects scan option
+   * Export - as XLS ID3 info
+
+4. Photos
+   * TBD
+
+5. Videos
+   * TBD
+
+6. Top level Search
+   * Search by name, title across media types or select media type
+
+7. Administration
+   * Permission Management
+   * Role Management: Group perms -> roles
+   * User Management: username, password, group assignment
+   * Server Settings that we make configurables
+
