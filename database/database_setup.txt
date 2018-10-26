@@ -1,0 +1,40 @@
+Notes on setting up PostgreSQL for the Media Catalog database.
+
+1. Install packages for PostgreSQL
+   sudo apt-get install postgresql postgresql-contrib
+
+2. Create User and Database for Media Catalog
+   NOTE: change <REDACTED> to the password you want for the user account.
+
+   sudo -i -u postgres
+   createuser --interactive
+     Enter name of role to add: media
+     Shall the new role be a superuser? (y/n) n
+     Shall the new role be allowed to create databases? (y/n) n
+     Shall the new role be allowed to create more new roles? (y/n) n
+
+   psql
+     postgres=# alter user media with password '<REDACTED>';
+
+   createdb media
+
+3. Change pg_hba.conf to lock down PostgreSQL to localhost
+   And (to start with) not require a password.
+
+   sudo vi /etc/postgresql/9.5/main/pg_hba.conf
+   Contents should be:
+     # TYPE  DATABASE        USER            ADDRESS                 METHOD
+     local   all             postgres                                peer
+     local   all             all                                     trust
+     host    all             all             127.0.0.1/32            md5
+     host    all             all             ::1/128                 md5
+     host    all             all             0.0.0.0/0               reject
+
+   sudo systemctl restart postgresql
+
+   NOTE: if you want to require a password, change "peer" to "password", "md5"
+   or one of the other auth-methods supported by PostgreSQL.
+
+4. Create tables - see the create_schema.sql file
+   psql -U media media -f create_schema.sql
+

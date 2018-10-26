@@ -13,7 +13,9 @@ Backend
     Flask-Restful?
     SQLAlchemy, PostgreSQL (PsycoPG2)
     Marshmallow
-
+    PyTest
+    PyLint
+    
 *** Install dependencies
     Use pipenv for package setup/tracking
 
@@ -32,16 +34,16 @@ Backend
         Installing setuptools, pip, wheel...done.
         Setting project for backend-RZ_kyaec to /home/rternosky/src/mediaserver/backend
     pipenv install flask marshmallow flask-cors
-    pipenv install sqlalchemy psycopg2-binary
+    pipenv install sqlalchemy psycopg2-binary pytest pylint
 
     touch src/__init__.py
 
     Create file: backend/src/main.py
 
-# coding=utf-8
 """
 Copyright 2018 Robert Ternosky
 """
+# coding=utf-8
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
