@@ -18,6 +18,7 @@ import argparse
 import csv
 import datetime
 import os
+import pickle
 import pprint
 
 import requests
@@ -67,6 +68,11 @@ def build_arg_parser():
     parser.add_argument('fname', action='store', help='CSV filename to use as input')
 
     # Named arguments, i.e. starting with "-" or "--"
+    parser.add_argument('-c', '--cachedir', dest='cachedir', required=False,
+                        default='./cache', help='Cache directory')
+    parser.add_argument('-d', '--disablecache', dest='disable_cache', action='store_true',
+                        required=False, default=False,
+                        help='Do not use cache files where possible (default: no)')
     parser.add_argument('-C', '--commit', dest='commit', action='store_true', required=False,
                         default=False, help='Commit database work? (default: no)')
     parser.add_argument('-v', '--verbose', dest='verbose', action='count', required=False,
@@ -83,6 +89,14 @@ def validate_args(parser):
     args = parser.parse_args()
     if not os.path.exists(args.fname):
         parser.error('filename : {} does not exist or cannot be reached'.format(args.fname))
+
+    if args.cachedir:
+        if not os.path.exists(args.cachedir):
+            try:
+                os.makedirs(args.cachedir)
+            except OSError as err:
+                parser.error('While ensuring existence of directory: {}, Error:\n{}'.format(
+                    args.cachedir, err))
 
     return args
 
@@ -162,17 +176,40 @@ def main():
                 print("\tSkipping row #: {} - ISBN value is missing".format(count+1))
             continue
 
-        # XXX: cache API results to avoid hammering server -c/-cache?
-        # Fetch book from Open Library API
-        if args.verbose > 0:
-            print("\tFetching data for row #: {} with ISBN: {}".format(count, csv_book['isbn']))
+        # We cache API results. Get from there unless directed otherwise
+        ol_book = {}
+        cache_file = '{}/isbn{}.dat'.format(args.cachedir, csv_book['isbn'])
 
-        try:
-            ol_book = search_isbn(isbn_list=[csv_book['isbn']])
-        except requests.exceptions.HTTPError as err:
-            print("\tERROR: HTTP error searching OpenLibrary.org")
-            print("\t{}".format(err))
-            continue
+        # Try to get cache file first unless directed otherwise [-d]
+        if not args.disable_cache:
+            if os.path.exists(cache_file):
+                if args.verbose > 0:
+                    print("\tLoading row: {} with ISBN: {} from cache file: {}".format(
+                        count, csv_book['isbn'], cache_file))
+
+                with open(cache_file, 'rb') as fp:
+                    ol_book = pickle.load(fp)
+
+        # Either no cache file found or [-d] present. Use OpenLibrary to fetch data
+        if not ol_book:
+            # Fetch book from Open Library API
+            if args.verbose > 0:
+                print("\tFetching data for row #: {} with ISBN: {}".format(count, csv_book['isbn']))
+
+            try:
+                ol_book = search_isbn(isbn_list=[csv_book['isbn']])
+            except requests.exceptions.HTTPError as err:
+                print("\tERROR: HTTP error searching OpenLibrary.org")
+                print("\t{}".format(err))
+                continue
+
+            # Since we got from an API write cache file unless directed otherwise [-d]
+            if not args.disable_cache:
+                if args.verbose >1:
+                    print("\tWriting cache file :{}".format(cache_file))
+
+                with open(cache_file, 'wb') as fp:
+                    pickle.dump(ol_book, fp, pickle.HIGHEST_PROTOCOL)
 
         if args.verbose > 1:
             pprint.pprint(csv_book)

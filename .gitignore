@@ -112,3 +112,6 @@ dmypy.json
 
 # emacs
 *~
+
+# media_catalog
+tools/cache

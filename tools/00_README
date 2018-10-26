@@ -1,0 +1,5 @@
+You need the "backend" Pip Env setup to use these tools.
+
+  cd ../backend
+  pipenv shell -c
+  cd -
