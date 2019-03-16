@@ -78,14 +78,14 @@ def validate_args(parser):
     """
     args = parser.parse_args()
     if not os.path.exists(args.fname):
-        parser.error('filename : {} does not exist or cannot be reached'.format(args.fname))
+        parser.error('filename : {0} does not exist or cannot be reached'.format(args.fname))
 
     if args.cachedir:
         if not os.path.exists(args.cachedir):
             try:
                 os.makedirs(args.cachedir)
             except OSError as err:
-                parser.error('While ensuring existence of directory: {}, Error:\n{}'.format(
+                parser.error('While ensuring existence of directory: {0}, Error:\n{1}'.format(
                     args.cachedir, err))
 
     return args
@@ -101,8 +101,8 @@ def search_isbn(isbn):
     :raises requests.exceptions.HTTPError on failure
     :precondition: isbn is string in ISBN format
     """
-    query_string = 'jscmd=data&format=json&bibkeys={}'.format(isbn)
-    full_url = "{}?{}".format(DEFAULT_BASE_URL, query_string)
+    query_string = 'jscmd=data&format=json&bibkeys={0}'.format(isbn)
+    full_url = "{0}?{1}".format(DEFAULT_BASE_URL, query_string)
     resp = requests.get(full_url)
     resp.raise_for_status()
 
@@ -124,13 +124,13 @@ def fetch_book_details(isbn, cache_dir, disable_cache, verbose):
            ({} = ERROR OR {Data from OpenLibrary. Either real time or from cache},
             '' = Error message or empty string on success)
     """
-    cache_file = '{}/isbn{}.dat'.format(cache_dir, isbn)
+    cache_file = '{0}/isbn{1}.dat'.format(cache_dir, isbn)
 
     # Try to get cache file first unless directed otherwise [-d]
     if not disable_cache:
         if os.path.exists(cache_file):
             if verbose > 0:
-                print("\tLoading ISBN: {} from cache file: {}".format(isbn, cache_file))
+                print("\tLoading ISBN: {0} from cache file: {1}".format(isbn, cache_file))
 
             with open(cache_file, 'rb') as fhandle:
                 ol_book = pickle.load(fhandle)
@@ -142,12 +142,12 @@ def fetch_book_details(isbn, cache_dir, disable_cache, verbose):
     try:
         ol_book = search_isbn(isbn=isbn)
     except requests.exceptions.HTTPError as err:
-        error = "ERROR: HTTP error searching OpenLibrary.org: {}".format(err)
+        error = "ERROR: HTTP error searching OpenLibrary.org: {0}".format(err)
         return ({}, error)
 
     # Since we got from an API write cache file always
     if verbose > 1:
-        print("\tWriting cache file: {}".format(cache_file))
+        print("\tWriting cache file: {0}".format(cache_file))
 
     with open(cache_file, 'wb') as fhandle:
         pickle.dump(ol_book, fhandle, pickle.HIGHEST_PROTOCOL)
@@ -177,12 +177,12 @@ def populate_author(session, csv_book, ol_book, existing_authors):
     # OL['authors'] = [{'name': 'Justin Cronin', 'url': 'https://...'}, ... ]
     for author in ol_book['authors']:
         if author['url'] in existing_authors:
-            print("Skipping Author {} ({})".format(author['name'], author['url']))
+            print("Skipping Author {name} ({url})".format(**author))
             # XXX: compare before returning?
             return existing_authors[author['url']]
 
         # Not pre-existing. Insert and update existing_authors
-        print("Creating author: {} ({})".format(author['name'], author['url']))
+        print("Creating author: {name} ({url})".format(**author))
         new_author = media_schema.Author()
         new_author.author = author['name']
         new_author.url = author['url']
@@ -206,7 +206,8 @@ def process_book(session, csv_book, ol_book, existing_data):
     # Since there is duplicated data between the 2 sources  the rule is:
     #   Use OL data, but augment with comments, series, summary from CSV
     #   nvl(OL, CSV) for authors, # pages, publish date, publisher, title
-    author = populate_author(session, csv_book, ol_book, existing_authors=existing_data['authors'])
+    author = populate_author(session=session, csv_book=csv_book, ol_book=ol_book,
+                             existing_authors=existing_data['authors'])
     # 2. Create Publisher
     # 3. Create Edition
     # 4. Create Series
@@ -239,11 +240,11 @@ def main():
     parser = build_arg_parser()
     args = validate_args(parser=parser)
 
-    print("bulk_import execution start: {:%b-%d-%Y :%H:%M:%S}".format(datetime.datetime.now()))
-    print("Parsing CSV file: {}".format(args.fname))
+    print("bulk_import execution start: {0:%b-%d-%Y :%H:%M:%S}".format(datetime.datetime.now()))
+    print("Parsing CSV file: {0}".format(args.fname))
 
-    url = 'postgresql://{}:{}@{}:{}/{}'.format(args.db_user, args.db_password, args.db_host,
-                                               args.db_port, args.db_name)
+    url = 'postgresql://{0}:{1}@{2}:{3}/{4}'.format(args.db_user, args.db_password, args.db_host,
+                                                    args.db_port, args.db_name)
     engine = sqlalchemy.create_engine(url, client_encoding='utf8', echo=False)
     session_handle = sqlorm.sessionmaker(bind=engine)
     session = session_handle()
@@ -274,11 +275,11 @@ def main():
         # Don't waste time and a potential API hit on a blank ISBN value.
         if not csv_book['isbn']:
             if args.verbose > 0:
-                print("\tSkipping row #: {} - ISBN value is missing".format(count+1))
+                print("\tSkipping row #: {0} - ISBN value is missing".format(count+1))
             continue
 
         if args.verbose > 0:
-            print("\tFetching data for row #: {} with ISBN: {}".format(count, csv_book['isbn']))
+            print("\tFetching data for row #: {0} with ISBN: {1}".format(count, csv_book['isbn']))
 
         # We cache API results. Get from there unless directed otherwise
         ol_book, error = fetch_book_details(isbn=csv_book['isbn'], cache_dir=args.cachedir,
@@ -306,8 +307,8 @@ def main():
 
     session.close()
 
-    print("Import script complete at: {:%b-%d-%Y :%H:%M:%S}".format(datetime.datetime.now()))
-    print("Successfully processed: {} / {} books in CSV file".format(success_count, total_count))
+    print("Import script complete at: {0:%b-%d-%Y :%H:%M:%S}".format(datetime.datetime.now()))
+    print("Successfully processed: {0} / {1} books in CSV file".format(success_count, total_count))
 
 #################################################################
 # MAIN
