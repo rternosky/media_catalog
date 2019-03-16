@@ -165,23 +165,63 @@ def schema_to_dict(schema_object):
     cols = schema_object.__table__.columns.keys()
     return dict((x, getattr(schema_object, x)) for x in cols)
 
-def populate_author(session, csv_book, ol_book, existing_authors):
+def populate_publisher(session, csv_book, ol_book, existing):
+    """Add the publisher(s) to the database if not already there.
+
+    :param session: SQLAlchemy.org.Session() object
+    :param csv_book: Dictionary. Row from CSV file representing a book
+    :param ol_book: Dictionary. Data from Open Library for ISBN from csv_book
+    :param existing: Dictionary. Publishers we've seen. MODIFIED in here
+    """
+    # XXX: Consider cases where:
+    # A) publishers not in OL
+    # B) publishers not in CSV
+    # C) publishers not in OL or CSV
+
+    # CSV['publisher'] = 'Ace Books'
+    # OL['publishers'] = [{'name': 'Ace'}]
+    for publisher in ol_book['publishers']:
+        if publisher['url'] in existing:
+            print("Skipping Publisher {name} ({url})".format(**publisher))
+            # XXX: compare before returning?
+            return existing[publisher['url']]
+
+        # Not pre-existing. Insert and update existing
+        print("Creating publisher: {name} ({url})".format(**publisher))
+        new_publisher = media_schema.Publisher()
+        new_publisher.publisher = publisher['name']
+        new_publisher.url = publisher['url']
+        session.add(new_publisher)
+
+        # Fetch the SERIAL generated publisher_id value
+        session.flush()
+
+        # Add to existing in-case multiple adds from a single import
+        existing[new_publisher.url] =  schema_to_dict(schema_object=new_publisher)
+
+
+def populate_author(session, csv_book, ol_book, existing):
     """Add the author(s) to the database if not already there.
 
     :param session: SQLAlchemy.org.Session() object
     :param csv_book: Dictionary. Row from CSV file representing a book
     :param ol_book: Dictionary. Data from Open Library for ISBN from csv_book
-    :param existing_authors: Dictionary. Authors we've seen. MODIFIED in here
+    :param existing: Dictionary. Authors we've seen. MODIFIED in here
     """
+    # XXX: Consider cases where:
+    # A) authors not in OL
+    # B) authors not in CSV
+    # C) authors not in OL or CSV
+
     # CSV['authors'] = 'Justin Cronin'
     # OL['authors'] = [{'name': 'Justin Cronin', 'url': 'https://...'}, ... ]
     for author in ol_book['authors']:
-        if author['url'] in existing_authors:
+        if author['url'] in existing:
             print("Skipping Author {name} ({url})".format(**author))
             # XXX: compare before returning?
-            return existing_authors[author['url']]
+            return existing[author['url']]
 
-        # Not pre-existing. Insert and update existing_authors
+        # Not pre-existing. Insert and update existing
         print("Creating author: {name} ({url})".format(**author))
         new_author = media_schema.Author()
         new_author.author = author['name']
@@ -191,8 +231,8 @@ def populate_author(session, csv_book, ol_book, existing_authors):
         # Fetch the SERIAL generated author_id value
         session.flush()
 
-        # Add to existing_authors in-case multiple adds from a single import
-        existing_authors[new_author.url] =  schema_to_dict(schema_object=new_author)
+        # Add to existing in-case multiple adds from a single import
+        existing[new_author.url] =  schema_to_dict(schema_object=new_author)
 
 def process_book(session, csv_book, ol_book, existing_data):
     """Process a book and write to database.
@@ -206,9 +246,15 @@ def process_book(session, csv_book, ol_book, existing_data):
     # Since there is duplicated data between the 2 sources  the rule is:
     #   Use OL data, but augment with comments, series, summary from CSV
     #   nvl(OL, CSV) for authors, # pages, publish date, publisher, title
+
+    # XXX: turn into dispatch table - if the signature is always the same
     author = populate_author(session=session, csv_book=csv_book, ol_book=ol_book,
-                             existing_authors=existing_data['authors'])
+                             existing=existing_data['authors'])
+
     # 2. Create Publisher
+    #publisher = populate_publisher(session=session, csv_book=csv_book, ol_book=ol_book,
+    #                               existing=existing_data['publishers'])
+
     # 3. Create Edition
     # 4. Create Series
     # 5. Create Book
@@ -223,15 +269,21 @@ def index_db_data(session):
     :param session: SQLAlchemy.org.Session() object
     :returns: Dictionary. { tablename: { INDEX KEY: {table row } } }
     """
+    # Index all data as a cache to avoid hammering the database later
+    # Eery object will be a dict of format: { KEY: {} }. The KEY column
+    # may vary by datatype. Our in memory cache will be for format:
+    # { TYPE: { KEY: {} } }
     existing_data = {}
 
-    # Need authors table indexed by URL { url: {} }
-    authors_by_url = {}
-    #author_cols = media_schema.Author.__table__.columns.keys()
+    # table: authors. indexed by URL { url: {} }
+    existing_data['authors'] = {}
     for author in session.query(media_schema.Author):
-        authors_by_url[author.url] = schema_to_dict(schema_object=author)
+        existing_data['authors'][author.url] = schema_to_dict(schema_object=author)
 
-    existing_data['authors'] = authors_by_url
+    # table: publishers: indexed by URL { url: {} }
+    existing_data['publishers'] = {}
+    for author in session.query(media_schema.Publisher):
+        existing_data['publishers'][publisher.url] = schema_to_dict(schema_object=publisher)
 
     return existing_data
 
@@ -290,7 +342,10 @@ def main():
             continue
 
         if args.verbose > 1:
+            print("\n")
+            print("CSV Data:")
             pprint.pprint(csv_book)
+            print("OL Data:")
             pprint.pprint(ol_book)
             print("\n")
 
