@@ -1,0 +1,14 @@
+# type of database. Run with -dbhelp for details
+schemaspy.t=pgsql
+# optional path to alternative jdbc drivers.
+schemaspy.dp=./postgresql-42.2.5.jar
+# database properties: host, port number, name user, password
+schemaspy.host=localhost
+schemaspy.port=5432
+schemaspy.db=media
+schemaspy.u=media
+schemaspy.p=media
+# output dir to save generated files
+schemaspy.o=schema_spy_output
+# db scheme for which generate diagrams
+schemaspy.s=public
