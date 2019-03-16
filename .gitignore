@@ -114,4 +114,6 @@ dmypy.json
 *~
 
 # media_catalog
+database/*.jar
+database/schema_spy_output/*
 tools/cache

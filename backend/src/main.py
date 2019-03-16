@@ -1,7 +1,7 @@
-#coding=utf-8
 """
 Copyright 2018 Robert Ternosky
 """
+# coding=utf-8
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 

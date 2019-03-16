@@ -44,6 +44,8 @@ Things I want the system to have:
        * Tag data considered authoritative for ID3 info.
    * Remove - Archive don't remove. Consider how this affects scan option
    * Export - as XLS ID3 info
+   * Much later:
+     Streaming, playlists
 
 4. Photos
    * TBD

@@ -1,15 +1,15 @@
 -- Copyright 2018 Robert Ternosky
-drop table series_books;
-drop table book_tags;
-drop table book_authors;
-drop table book_publishers;
-drop table books;
-drop table editions;
-drop table tags;
-drop table series;
-drop table ratings;
-drop table publishers;
-drop table authors;
+DROP TABLE series_books;
+DROP TABLE book_tags;
+DROP TABLE book_authors;
+DROP TABLE book_publishers;
+DROP TABLE books;
+DROP TABLE editions;
+DROP TABLE tags;
+DROP TABLE series;
+DROP TABLE ratings;
+DROP TABLE publishers;
+DROP TABLE authors;
 
 CREATE TABLE authors (
   author_id        SERIAL        PRIMARY KEY NOT NULL,

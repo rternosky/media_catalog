@@ -25,7 +25,7 @@ Notes on setting up PostgreSQL for the Media Catalog database.
    Contents should be:
      # TYPE  DATABASE        USER            ADDRESS                 METHOD
      local   all             postgres                                peer
-     local   all             all                                     trust
+     local   all             all                                     md5
      host    all             all             127.0.0.1/32            md5
      host    all             all             ::1/128                 md5
      host    all             all             0.0.0.0/0               reject
@@ -38,3 +38,40 @@ Notes on setting up PostgreSQL for the Media Catalog database.
 4. Create tables - see the create_schema.sql file
    psql -U media media -f create_schema.sql
 
+5. Upgrade to PostgreSQL 11
+   sudo apt install postgresql-11
+
+6. [Optional] Setup SchemaSpy
+   A. sudo apt-get install graphviz
+   B. Download the schemaspy.jar to the database/ directory
+   C. Setup schemaspy_config.txt to configure schemaspy
+   D. Run the program (now in run_schemaspy.sh)
+      java -jar schemaspy-6.0.0.jar -configFile schemaspy_config.txt
+
+7. [Optional] Setup pgadmin
+   * sudo apt-get install curl ca-certificates
+   * curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+   * sudo vi /etc/apt/sources.list.d/pgdg.list
+     make contents:
+       deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main
+   * sudo apt-get update
+   * sudo apt-get install pgadmin4
+
+   ** Configure pgadmin4 to use the media database:
+   [bash] pgadmin4
+   from GUI:
+     Click "Add New Server"
+        "Create Server" Dialog:
+          "General" Tab:
+            Name        : Media Catalog
+            Server Group: Servers
+            Connect Now?: <checked>
+
+          "Connection" Tab:
+            Host name/address   : 127.0.0.1
+            Port                : 5432
+            Maintenance database: media
+            Username            : media
+            Password            : <REDACTED>
+            Save password?      : Your choice
+     Click "Save" button
